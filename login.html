@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบ - Warranty Guard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 w-full max-w-md">
+    <div class="flex items-center gap-2 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl">W</div>
+      <h1 class="text-xl font-semibold text-slate-800">Warranty Guard</h1>
+    </div>
+
+    <div class="flex border-b border-slate-200 mb-6">
+      <button id="tab-login" onclick="toggleTab('login')" class="flex-1 pb-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600">เข้าสู่ระบบ</button>
+      <button id="tab-register" onclick="toggleTab('register')" class="flex-1 pb-3 text-sm font-medium border-b-2 border-transparent text-slate-400">สมัครสมาชิก</button>
+    </div>
+
+    <form id="auth-form" onsubmit="handleSubmit(event)" class="space-y-4">
+      <div id="field-name" class="hidden">
+        <label class="block text-xs font-medium text-slate-600 mb-1">ชื่อ-นามสกุล</label>
+        <input type="text" id="name" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">อีเมล</label>
+        <input type="email" id="email" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">รหัสผ่าน</label>
+        <input type="password" id="password" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-blue-500">
+      </div>
+      <button type="submit" class="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg text-sm hover:bg-blue-700 transition">ยืนยัน</button>
+    </form>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    checkAuth(false);
+    let mode = 'login';
+
+    function toggleTab(type) {
+      mode = type;
+      document.getElementById('tab-login').className = type === 'login' ? 'flex-1 pb-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600' : 'flex-1 pb-3 text-sm font-medium border-b-2 border-transparent text-slate-400';
+      document.getElementById('tab-register').className = type === 'register' ? 'flex-1 pb-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600' : 'flex-1 pb-3 text-sm font-medium border-b-2 border-transparent text-slate-400';
+      document.getElementById('field-name').classList.toggle('hidden', type === 'login');
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const name = document.getElementById('name').value;
+
+      const endpoint = mode === 'login' ? `${API_BASE}/auth/login` : `${API_BASE}/auth/register`;
+      const body = mode === 'login' ? { email, password } : { name, email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        if (mode === 'login') {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          window.location.href = 'index.html';
+        } else {
+          alert('สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ');
+          toggleTab('login');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  </script>
+</body>
+</html>
